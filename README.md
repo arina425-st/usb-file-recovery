@@ -15,15 +15,17 @@ potentially sensitive data may be recovered by unauthorized parties, accessing t
 - Dictionary of magic bytes for common file types (DOC, DOCX/ZIP, EXE, JPEG/JPG, PDF, PNG)
 - Reading the USB on octet level
 - Sequential scanning for magic bytes
+- Extracting and saving the found files
 
 ## Features (planned)
-- Extracting and saving the found files
 - GUI for scanning, progress tracking, and downloading recovered files
 
 ## How it works
 Introduce the USB stick in the device you are running the app from. 
-Then, provide the hardcoded path of the USB stick and press run. All the 
-found file types will be printed in the terminal.
+Then, provide the hardcoded path of the USB stick, 
+(eventually) provide the hardcoded path of the output file (existent or not) 
+and press run. All the found and saved file names will be printed in the terminal, 
+and saved in the specified output folder.
 
 
 ## Requirements
@@ -37,7 +39,9 @@ python main.py
 ```
 1. Open `main.py`.
 2. Set `usb_path` to the path of the USB stick within your device.
-3. Run the above command.
+3. (Optional) Specify the location where the recovered files should be saved by
+setting `output_folder` to an already existent (or about to be created) path.
+4. Run the above command.
 
 The found file types will be printed in the terminal.
 
@@ -49,7 +53,9 @@ USB stick of minimum 4 GB.
 - Matching magic bytes (i.e. file signatures) to file types.
 
 ## What I would improve
-- ADD TEXT
+Recovered files are not automatically scanned for malware. In a real-world 
+scenario, recovered files should be opened only in an isolated environment 
+and scanned with antivirus software before being trusted.
 
 ## License
 Copyright (c) 2026 Arina Ralea

@@ -27,47 +27,77 @@ MAGIC_BYTES = {
     # Convert from hex to byte
     # for later comparison;
     # white spaces are ignored anyway:
-    "DOC": {
+    "doc": {
         "header": bytes.fromhex("D0 CF 11 E0 A1 B1 1A E1"),
         "max_estimated_file_size": 32 * 1000 * 1000
     },
-    "DOCX/ZIP": {
+    "zip": {
         "header": bytes.fromhex("50 4B 03 04"),
         "max_estimated_file_size": 4 * 1024 * 1024 * 1024
     },
-    "EXE": {
+    "exe": {
         "header": bytes.fromhex("4D 5A"),
         "max_estimated_file_size": 4 * 1000 * 1000 * 1000
     },
-    "JPEG/JPG": {
+    "jpg": {
         "header": bytes.fromhex("FF D8 FF"),
         "trailer": bytes.fromhex("FF D9")
     },
-    "PDF": {
+    "pdf": {
         "header": bytes.fromhex("25 50 44 46"),
         "trailer": bytes.fromhex("25 25 45 4F 46")
     },
-    "PNG": {
+    "png": {
         "header": bytes.fromhex("89 50 4E 47"),
         "trailer": bytes.fromhex("49 45 4E 44")
     }
 }
 
+# Save current number of recovered files for file numbering:
+current_recovered_file_nr = 1
 
-def match_with_magic_bytes(bytes_data):
+
+def recover_if_match_with_magic_bytes(bytes_data):
     """
     Compares the given bytes_data against all the
     magic types within the dictionary. If a match is found,
     it returns the corresponding file type, otherwise it
     returns None.
     :param bytes_data: (bytes) raw bytes of the data from the USB
-    :return match: (string) the corresponding file type or None if no match is found
+    :return recovered_file_name: (string) the name of the recovered file with its file type as a file extension
+                                    or None if no match is found
+    :return recovered_file: (bytes) the recovered file or None if no match is found
+    :return recovered_file_length: (int) the length of the recovered file or 0 is no match is found
     """
-    match = None
+    global current_recovered_file_nr
+    recovered_file_name = None
+    recovered_file = None
+    recovered_file_length = 0
+
     for file_type, magic_bytes in MAGIC_BYTES.items():
         # CAREFUL: avoid "==" because magic bytes are only at the start,
         # not the whole byte stream (i.e. perfect match).
         if bytes_data.startswith(magic_bytes.get("header")):
-            match = file_type
+            is_match_found = False
+            # Check if file type has trailer:
+            if "trailer" in magic_bytes:
+                trailer = magic_bytes.get("trailer")
+                # Returns -1 if no trailer is found:
+                trailer_index = bytes_data.find(trailer)
+                if trailer_index != -1:
+                    is_match_found = True
+                    # Get file until the last byte of the trailer:
+                    recovered_file = bytes_data[:trailer_index + len(trailer)]
 
-    return match
+            # Or check if file type has max estimated file size:
+            elif "max_estimated_file_size" in magic_bytes:
+                max_estimated_file_size = magic_bytes.get("max_estimated_file_size")
+                recovered_file = bytes_data[:max_estimated_file_size]
+                is_match_found = True
+
+            if is_match_found:
+                recovered_file_name = f"recovered_file_{current_recovered_file_nr}.{file_type}"
+                recovered_file_length = len(recovered_file)
+                current_recovered_file_nr = current_recovered_file_nr + 1
+
+    return recovered_file_name, recovered_file, recovered_file_length
