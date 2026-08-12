@@ -1,13 +1,12 @@
 # 1 octet = 8 bits = 1 byte
+import gui
 import magic_bytes_matching
-import file_saving
 
 
-def read_bytes_from_usb(max_bytes_read_at_once, usb_path, output_folder):
+def read_bytes_from_usb(usb_path, output_folder):
     """
     Reads from the specified file path,
-    maximum specified number of bytes at a time.
-    :param max_bytes_read_at_once: (int) nr. of bytes read at once
+    all the bytes at a once.
     :param usb_path: (string) path of the file where the USB is
     :param output_folder: (string) path of the output folder
                           where the recovered files will be saved
@@ -24,28 +23,66 @@ def read_bytes_from_usb(max_bytes_read_at_once, usb_path, output_folder):
     # DO NOT write on the USB disk,
     # otherwise deleted files may be overwritten,
     # and, hence, never recovered.
-    with open(usb_path, "rb") as file:
-        print("[START FILE RECOVERY]")
-        while True:
-            bytes_data = file.read(max_bytes_read_at_once)
+    # Get USB size:
+    # 4 MB per read
+    chunk_size = 4 * 1000 * 1000
+    # limit of project: 8 GB
+    # max_total_size = 8 * 1000 * 1000 * 1000
+    # TODO: 8 GB is too slow but needed, change somehow to be faster
+    max_total_size = 1 * 1000 * 1000 * 1000
 
-            if not bytes_data:
+    chunks = []
+    total_read = 0
+
+    with open(usb_path, "rb") as file:
+        while total_read < max_total_size:
+            chunk = file.read(chunk_size)
+            if not chunk:
+                break
+            chunks.append(chunk)
+            print("DEBUG: Still reading chunk")
+            total_read += len(chunk)
+            print(f"DEBUG: Current length: {total_read}")
+
+    bytes_data = b"".join(chunks)
+    usb_size = len(bytes_data)
+
+    # Setup progress bar:
+    gui.setup_progress_bar(usb_size)
+
+    # Uncomment for debug / testing purposes:
+    # print("[START FILE RECOVERY]")
+    gui.display_text_in_output_box_of_gui("[START FILE RECOVERY]")
+
+    current_position = 0
+    while current_position < usb_size:
+        # Match magic bytes:
+        recovered_file_name, recovered_file, recovered_file_length = (
+            magic_bytes_matching.recover_if_match_with_magic_bytes(bytes_data[current_position:])
+        )
+
+        # Avoid unnecessary saving of files of type None:
+        if recovered_file is None:
+            # Move to the next closest header:
+            next_position = magic_bytes_matching.find_next_magic_bytes_header(bytes_data, current_position + 1)
+            # If there are no other headers, stop the algorithm:
+            if next_position is None:
                 break
 
-            # Match magic bytes:
-            recovered_file_name, recovered_file, recovered_file_length = (
-                magic_bytes_matching.recover_if_match_with_magic_bytes(bytes_data)
-            )
+            current_position = next_position
+            gui.update_progress_bar(current_position)
+            continue
 
-            # Avoid unnecessary saving of files of type None:
-            if recovered_file is None:
-                continue
+        # print(f"[FOUND FILE]: {recovered_file_name}")
+        # gui.display_text_in_output_box_of_gui(f"[FOUND FILE]: {recovered_file_name}")
+        # file_saving.save_recovered_file_at_given_path(recovered_file, recovered_file_name, output_folder)
+        gui.display_recovered_file_name_in_output_box_of_gui(recovered_file_name, recovered_file)
 
-            print(f"[FOUND FILE]: {recovered_file_name}")
-            file_saving.save_recovered_file_at_given_path(recovered_file, recovered_file_name, output_folder)
-            # match = magic_bytes_matching.recover_if_match_with_magic_bytes(bytes_data)
+        current_position += recovered_file_length
+        # Update progress bar depending on how much of the usb_size has been scanned:
+        gui.update_progress_bar(current_position)
 
-            # if match is not None:
-            #     print(match)
+    gui.update_progress_bar(usb_size)
+    # print("[END FILE RECOVERY]")
+    gui.display_text_in_output_box_of_gui("[END FILE RECOVERY]")
 
-        print("[END FILE RECOVERY]")

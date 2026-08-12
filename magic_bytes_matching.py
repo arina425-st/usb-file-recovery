@@ -53,6 +53,34 @@ MAGIC_BYTES = {
     }
 }
 
+
+def find_next_magic_bytes_header(bytes_data, start_position):
+    """
+    Finds the closest position (>= start_position) at which the
+    header of any known magic byte starts. Useful for skipping to
+    useful bytes rather than analysing every byte one by one.
+    :param bytes_data: (bytes) all the bytes from the USB
+    :param start_position: (int) the position from where the searching starts
+    :return: closest_header_position: (int or None) position of the closest header
+                                      or None if no headers are found.
+    """
+    closest_header_position = None
+
+    # Go through each file type within the dictionary
+    # and find the match at the closest byte position
+    # from the given start position.
+    for file_type, magic_bytes in MAGIC_BYTES.items():
+        header = magic_bytes.get("header")
+        # array.find(element, start_position) - searches the index of element
+        #                                       starting from start_position within array
+        header_index = bytes_data.find(header, start_position)
+
+        if header_index != -1 and (closest_header_position is None or header_index < closest_header_position):
+            closest_header_position = header_index
+
+    return closest_header_position
+
+
 # Save current number of recovered files for file numbering:
 current_recovered_file_nr = 1
 

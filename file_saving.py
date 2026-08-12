@@ -1,5 +1,7 @@
 import os.path
 
+import gui
+
 
 def save_recovered_file_at_given_path(recovered_file, recovered_file_name, output_folder):
     """
@@ -13,4 +15,5 @@ def save_recovered_file_at_given_path(recovered_file, recovered_file_name, outpu
     output_path = os.path.join(output_folder, recovered_file_name)
     with open(output_path, "wb") as file:
         file.write(recovered_file)
-        print(f"[SAVED FILE]: {recovered_file_name}")
+        # print(f"[SAVED FILE]: {recovered_file_name}")
+        gui.display_text_in_output_box_of_gui(f"[SAVED FILE]: {recovered_file_name}")
