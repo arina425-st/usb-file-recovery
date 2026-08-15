@@ -3,15 +3,16 @@ import gui
 import magic_bytes_matching
 
 
-def read_bytes_from_usb(usb_path, output_folder):
+def read_bytes_from_usb(usb_path):
     """
     Reads from the specified file path,
     all the bytes at a once.
     :param usb_path: (string) path of the file where the USB is
-    :param output_folder: (string) path of the output folder
-                          where the recovered files will be saved
     :return: None
     """
+    # Setup progress bar from 0 in case of past presses of the start scan button:
+    gui.setup_progress_bar(0)
+
     # Use "with ..." to close the file regardless
     # of errors occurred in the loop
     # Open the file for rb (= reading bytes):
@@ -34,6 +35,7 @@ def read_bytes_from_usb(usb_path, output_folder):
     chunks = []
     total_read = 0
 
+    # TODO: Save file on the USB stick + change documentation
     with open(usb_path, "rb") as file:
         while total_read < max_total_size:
             chunk = file.read(chunk_size)
@@ -47,7 +49,7 @@ def read_bytes_from_usb(usb_path, output_folder):
     bytes_data = b"".join(chunks)
     usb_size = len(bytes_data)
 
-    # Setup progress bar:
+    # Setup progress bar with respect to the actual USB size:
     gui.setup_progress_bar(usb_size)
 
     # Uncomment for debug / testing purposes:
@@ -85,4 +87,4 @@ def read_bytes_from_usb(usb_path, output_folder):
     gui.update_progress_bar(usb_size)
     # print("[END FILE RECOVERY]")
     gui.display_text_in_output_box_of_gui("[END FILE RECOVERY]")
-
+    gui.enable_start_recovery_button()

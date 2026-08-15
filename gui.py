@@ -14,17 +14,30 @@ tkinter_object = None
 output_box = None
 progress_bar = None
 output_folder = None
+start_button = None
 
 
 def start_recovery_thread(usb_path):
     """
     Starts a separate thread for the GUI in order to prevent
-    the program from freezing.
+    the program from freezing. Also disables the start recovery button
+    in order to prevent a second press during the scan and mess up the
+    already read / recovered files.
     :param usb_path: (string) the path of the USB drive
     :return: None
     """
-    thread = threading.Thread(target=byte_reading.read_bytes_from_usb, args=(usb_path, output_folder))
+    start_button.config(state=tkinter.DISABLED)
+    thread = threading.Thread(target=byte_reading.read_bytes_from_usb, args=(usb_path, ))
     thread.start()
+
+
+def enable_start_recovery_button():
+    """
+    Gets called at the end of the scan,
+    and enables the start recovery button.
+    :return:
+    """
+    start_button.config(state=tkinter.NORMAL)
 
 
 def display_gui():
@@ -33,7 +46,7 @@ def display_gui():
     :return: None
     """
 
-    global tkinter_object, output_box, progress_bar, output_folder
+    global tkinter_object, output_box, progress_bar, output_folder, start_button
 
     tkinter_object = tkinter.Tk()
     # Elements start on column 0,
@@ -81,13 +94,11 @@ def display_gui():
     # reading the input entered by the user in the entry field.
     # CAREFUL: Read user input when the function is called (i.e. within the start button),
     # otherwise the input field remains empty.
-    # TODO: Remove extra thread for GUI (not needed) or keep it for larger 8 GB USB drives
+
     # CAREFUL: Start a separate thread for the GUI, otherwise,
-    # the program will freeze.
-    # start_button = tkinter.Button(tkinter_object, text="Start File Recovery",
-    #                               command=lambda: start_recovery_thread(usb_file_path_entry.get()))
+    # the program will freeze for heavy tasks like downloading files.
     start_button = tkinter.Button(tkinter_object, text="Start File Recovery",
-                                  command=lambda: byte_reading.read_bytes_from_usb(usb_file_path_entry.get(), output_folder))
+                                  command=lambda: start_recovery_thread(usb_file_path_entry.get()))
     start_button.grid(row=6, column=0, pady=10)
 
     # Add frame to hold the output box + scrollbar together:
