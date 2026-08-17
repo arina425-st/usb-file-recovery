@@ -10,9 +10,6 @@ def read_bytes_from_usb(usb_path):
     :param usb_path: (string) path of the file where the USB is
     :return: None
     """
-    # Setup progress bar from 0 in case of past presses of the start scan button:
-    gui.setup_progress_bar(0)
-
     # Use "with ..." to close the file regardless
     # of errors occurred in the loop
     # Open the file for rb (= reading bytes):
@@ -35,8 +32,14 @@ def read_bytes_from_usb(usb_path):
     chunks = []
     total_read = 0
 
+    # Setup progress bar for the reading:
+    gui.setup_progress_bar(max_total_size)
+
     # TODO: Save file on the USB stick + change documentation
     with open(usb_path, "rb") as file:
+
+        gui.display_text_in_output_box_of_gui("[START USB READING]")
+
         while total_read < max_total_size:
             chunk = file.read(chunk_size)
             if not chunk:
@@ -45,6 +48,11 @@ def read_bytes_from_usb(usb_path):
             print("DEBUG: Still reading chunk")
             total_read += len(chunk)
             print(f"DEBUG: Current length: {total_read}")
+
+            # Update progress bar for the reading:
+            gui.update_progress_bar(total_read)
+
+        gui.display_text_in_output_box_of_gui("[END USB READING]")
 
     bytes_data = b"".join(chunks)
     usb_size = len(bytes_data)
