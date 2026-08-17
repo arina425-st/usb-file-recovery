@@ -36,23 +36,33 @@ def read_bytes_from_usb(usb_path):
     gui.setup_progress_bar(max_total_size)
 
     # TODO: Save file on the USB stick + change documentation
-    with open(usb_path, "rb") as file:
+    try:
+        with open(usb_path, "rb") as file:
 
-        gui.display_text_in_output_box_of_gui("[START USB READING]")
+            gui.display_text_in_output_box_of_gui("[START USB READING]")
 
-        while total_read < max_total_size:
-            chunk = file.read(chunk_size)
-            if not chunk:
-                break
-            chunks.append(chunk)
-            print("DEBUG: Still reading chunk")
-            total_read += len(chunk)
-            print(f"DEBUG: Current length: {total_read}")
+            while total_read < max_total_size:
+                chunk = file.read(chunk_size)
+                if not chunk:
+                    break
+                chunks.append(chunk)
+                print("DEBUG: Still reading chunk")
+                total_read += len(chunk)
+                print(f"DEBUG: Current length: {total_read}")
 
-            # Update progress bar for the reading:
-            gui.update_progress_bar(total_read)
+                # Update progress bar for the reading:
+                gui.update_progress_bar(total_read)
 
-        gui.display_text_in_output_box_of_gui("[END USB READING]")
+            gui.display_text_in_output_box_of_gui("[END USB READING]")
+    except FileNotFoundError:
+        gui.display_text_in_output_box_of_gui("[ERROR]: Path not found!")
+        gui.enable_start_recovery_button()
+        return
+    except PermissionError:
+        gui.display_text_in_output_box_of_gui("[ERROR]: Permission of accessing the path denied! Try running admin / "
+                                              "root mode.")
+        gui.enable_start_recovery_button()
+        return
 
     bytes_data = b"".join(chunks)
     usb_size = len(bytes_data)
@@ -83,9 +93,6 @@ def read_bytes_from_usb(usb_path):
             gui.update_progress_bar(current_position)
             continue
 
-        # print(f"[FOUND FILE]: {recovered_file_name}")
-        # gui.display_text_in_output_box_of_gui(f"[FOUND FILE]: {recovered_file_name}")
-        # file_saving.save_recovered_file_at_given_path(recovered_file, recovered_file_name, output_folder)
         gui.display_recovered_file_name_in_output_box_of_gui(recovered_file_name, recovered_file)
 
         current_position += recovered_file_length
