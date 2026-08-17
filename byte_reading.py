@@ -25,9 +25,7 @@ def read_bytes_from_usb(usb_path):
     # 4 MB per read
     chunk_size = 4 * 1000 * 1000
     # limit of project: 8 GB
-    # max_total_size = 8 * 1000 * 1000 * 1000
-    # TODO: 8 GB is too slow but needed, change somehow to be faster
-    max_total_size = 1 * 1000 * 1000 * 1000
+    max_total_size = 8 * 1000 * 1000 * 1000
 
     chunks = []
     total_read = 0
@@ -35,7 +33,6 @@ def read_bytes_from_usb(usb_path):
     # Setup progress bar for the reading:
     gui.setup_progress_bar(max_total_size)
 
-    # TODO: Save file on the USB stick + change documentation
     try:
         with open(usb_path, "rb") as file:
 

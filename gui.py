@@ -84,8 +84,6 @@ def display_gui():
     # such that it won't be glued to other elements.
     progress_bar.grid(row=5, column=0, pady=(0, 20))
 
-    # DRAFT: Use a temporary output put for saving the recovered file.
-    # TODO: Save the recovered file on the USB disk.
     output_folder = "recovered_files"
     # exist_ok=True - do not throw error if file already exists
     os.makedirs(output_folder, exist_ok=True)
